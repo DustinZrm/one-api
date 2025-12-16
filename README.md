@@ -1,62 +1,98 @@
 # One MCP - Unified MCP Gateway
 
-One MCP is a management and distribution system for Model Context Protocol (MCP) tools. It aggregates multiple upstream MCP servers into a single endpoint, providing unified access control and key management.
+[English](README.md) | [简体中文](README_zh.md)
 
-## Features
+One MCP is a powerful Model Context Protocol (MCP) management and distribution system. It acts as a unified gateway that aggregates multiple upstream MCP servers (supporting SSE, Stdio, and HTTP/REST) into a single standard MCP endpoint.
 
-- **Unified Interface**: Aggregates tools from multiple MCP servers into a single SSE endpoint.
-- **Key Management**: Generate API keys for clients.
-- **Access Control**: Control which upstream servers each API key can access.
-- **Web Dashboard**: Graphic interface to manage servers and keys.
+With One MCP, you can centrally manage your AI tools, provide granular access control via API keys, and offer a standardized interface for downstream clients (like Claude Desktop, Cursor, etc.).
 
-## Prerequisites
+## ✨ Features
 
-- Go 1.23+
-- Node.js 18+
-- SQLite (Embedded)
+- **Unified Aggregation**: Combines tools from multiple sources into a single SSE endpoint.
+- **Multi-Protocol Support**:
+  - **SSE**: Connect to standard SSE MCP servers.
+  - **Stdio**: Execute local commands/scripts as MCP servers.
+  - **HTTP/REST**: Wrap any REST API into an MCP tool with zero code.
+- **Granular Access Control**:
+  - **Server-Level**: Restrict keys to specific upstream servers.
+  - **Tool-Level**: Fine-grained permissions down to individual tools.
+- **Visual Dashboard**: A polished React-based UI for managing servers, viewing tools, and handling keys.
+- **Secure Authentication**: Built-in JWT authentication for the dashboard and Bearer Token auth for MCP clients.
+- **Single Binary Deployment**: The Go backend serves the React frontend, simplifying deployment.
 
-## Getting Started
+## 🚀 Getting Started
 
-### Backend
+### Prerequisites
 
-1. Navigate to `server` directory:
+- **Go**: 1.23 or higher
+- **Node.js**: 18 or higher (for building frontend)
+
+### Installation
+
+1. **Clone the repository**
    ```bash
-   cd server
+   git clone https://github.com/DustinZrm/one-api.git
+   cd one-api
    ```
-2. Install dependencies:
-   ```bash
-   go mod tidy
-   ```
-3. Run the server:
-   ```bash
-   go run cmd/server/main.go
-   ```
-   The server will start at `http://localhost:8080`.
 
-### Frontend
-
-1. Navigate to `web` directory:
+2. **Build the Frontend**
    ```bash
    cd web
-   ```
-2. Install dependencies:
-   ```bash
    npm install
+   npm run build
+   cd ..
    ```
-3. Run the development server:
+
+3. **Build and Run the Backend**
    ```bash
-   npm run dev
+   cd server
+   go mod tidy
+   go build -o one-mcp cmd/server/main.go
+   ./one-mcp
    ```
-   Access the dashboard at `http://localhost:5173`.
 
-## Usage
+   The server will start at `http://localhost:8080`.
 
-1. Open the dashboard.
-2. Go to **Servers** page and add your upstream MCP servers (SSE URL required).
-   - Example Name: `github` (Tools will be prefixed as `github__toolname`)
-   - Example URL: `http://localhost:3000/sse`
-3. Go to **API Keys** page and create a key.
-   - Select which servers this key can access.
-4. Use the key in your MCP Client (e.g. Claude Desktop, Cursor):
-   - Server URL: `http://localhost:8080/mcp/sse`
-   - Header: `Authorization: Bearer <YOUR_KEY>`
+## 📖 Usage Guide
+
+### 1. Access the Dashboard
+Open `http://localhost:8080` in your browser.
+- **Default Login**: `admin` / `admin`
+- *Please change your password immediately after logging in.*
+
+### 2. Add Upstream Servers
+Go to the **Servers** page to add your tool sources:
+
+- **SSE Mode**: Connect to existing MCP servers (e.g., Smithery).
+  - URL: `http://localhost:3000/sse`
+- **Stdio Mode**: Run local MCP servers (e.g., `@modelcontextprotocol/server-filesystem`).
+  - Command: `npx`
+  - Args: `["-y", "@modelcontextprotocol/server-filesystem", "/path/to/files"]`
+- **HTTP Mode**: Wrap a REST API as a tool.
+  - URL: `https://api.weather.com/v1/current`
+  - Method: `GET`
+  - Parameters: Define query params visually.
+
+### 3. Create API Keys
+Go to the **API Keys** page:
+- Create a key for your client (e.g., "Cursor Team A").
+- Select **Permission Scope**:
+  - **By Server**: Allow access to all tools in selected servers.
+  - **By Tool**: Select specific tools allowed for this key.
+
+### 4. Connect Clients
+Configure your MCP client (Claude Desktop, Cursor, etc.) to use One MCP:
+
+- **Type**: SSE
+- **URL**: `http://localhost:8080/mcp/sse`
+- **Headers**: `Authorization: Bearer sk-your-generated-key`
+
+## 🛠 Tech Stack
+
+- **Backend**: Go (Gin, GORM, SQLite)
+- **Frontend**: React, TypeScript, Ant Design, Vite
+- **Protocol**: Model Context Protocol (JSON-RPC 2.0 over SSE)
+
+## 📄 License
+
+MIT License
