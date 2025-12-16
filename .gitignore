@@ -1,0 +1,32 @@
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Go
+server/one-mcp.db
+server/server
+server/cmd/server/server
+server/vendor/
+*.exe
+*.test
+*.out
+
+# Node / Web
+web/node_modules/
+web/dist/
+web/.env
+web/.env.*
+web/npm-debug.log*
+web/yarn-debug.log*
+web/yarn-error.log*
+web/pnpm-debug.log*
+
+# Logs
+*.log
