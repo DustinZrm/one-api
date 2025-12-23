@@ -53,6 +53,35 @@ With One MCP, you can centrally manage your AI tools, provide granular access co
 
    The server will start at `http://localhost:8080`.
 
+## 🐳 Docker
+
+- Pull from GHCR
+  - `docker pull ghcr.io/DustinZrm/one-api:latest`
+- Run locally
+  - `docker run -d -p 8080:8080 --name one-mcp ghcr.io/DustinZrm/one-api:latest`
+- Enable data persistence
+  - `docker run -d -p 8080:8080 -v one-mcp-data:/app/server --name one-mcp ghcr.io/DustinZrm/one-api:latest`
+  - SQLite database `one-mcp.db` is stored in `/app/server` (volume `one-mcp-data`)
+- Environment variables
+  - `GIN_MODE=release` (default)
+  - Add `HTTP_PROXY`/`HTTPS_PROXY` if upstream servers require proxy access
+- Docker Compose (optional)
+  - ```yaml
+    services:
+      one-mcp:
+        image: ghcr.io/DustinZrm/one-api:latest
+        container_name: one-mcp
+        ports:
+          - "8080:8080"
+        volumes:
+          - one-mcp-data:/app/server
+        environment:
+          - GIN_MODE=release
+    volumes:
+      one-mcp-data:
+    ```
+  - Start with `docker compose up -d`
+
 ## 📖 Usage Guide
 
 ### 1. Access the Dashboard

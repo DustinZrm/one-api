@@ -53,6 +53,35 @@ One MCP 是一个强大的 Model Context Protocol (MCP) 管理与分发系统。
 
    服务将在 `http://localhost:8080` 启动。
 
+## 🐳 Docker
+
+- 从 GHCR 拉取镜像
+  - `docker pull ghcr.io/DustinZrm/one-api:latest`
+- 本地运行
+  - `docker run -d -p 8080:8080 --name one-mcp ghcr.io/DustinZrm/one-api:latest`
+- 启用数据持久化
+  - `docker run -d -p 8080:8080 -v one-mcp-data:/app/server --name one-mcp ghcr.io/DustinZrm/one-api:latest`
+  - SQLite 数据库 `one-mcp.db` 位于 `/app/server`（挂载卷 `one-mcp-data`）
+- 环境变量
+  - `GIN_MODE=release`（默认开启）
+  - 如果上游服务需要代理，可加入 `HTTP_PROXY`/`HTTPS_PROXY`
+- 可选：Docker Compose
+  - ```yaml
+    services:
+      one-mcp:
+        image: ghcr.io/DustinZrm/one-api:latest
+        container_name: one-mcp
+        ports:
+          - "8080:8080"
+        volumes:
+          - one-mcp-data:/app/server
+        environment:
+          - GIN_MODE=release
+    volumes:
+      one-mcp-data:
+    ```
+  - 使用 `docker compose up -d` 启动
+
 ## 📖 使用指南
 
 ### 1. 访问仪表盘
