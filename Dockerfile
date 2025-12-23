@@ -8,10 +8,12 @@ RUN npm run build
 FROM golang:1.24-alpine AS go-builder
 WORKDIR /build/server
 ENV GOPROXY=https://goproxy.cn,direct
+ARG TARGETOS
+ARG TARGETARCH
 COPY server/go.mod server/go.sum ./
 RUN go mod download
 COPY server ./
-ENV CGO_ENABLED=0 GOOS=linux
+ENV CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH
 RUN go build -o /build/one-mcp ./cmd/server
 
 FROM alpine:3.20
