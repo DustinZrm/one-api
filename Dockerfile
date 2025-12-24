@@ -17,7 +17,7 @@ ENV CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH
 RUN go build -o /build/one-mcp ./cmd/server
 
 FROM alpine:3.20
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk add --no-cache ca-certificates tzdata nodejs npm python3 py3-pip bash git curl
 WORKDIR /app/server
 COPY --from=go-builder /build/one-mcp ./one-mcp
 COPY --from=web-builder /web/dist /app/web/dist

@@ -68,6 +68,13 @@ With One MCP, you can centrally manage your AI tools, provide granular access co
 - Multi-arch support
   - Images include `linux/amd64`, `linux/arm64`, `linux/arm/v7`
   - Test explicit platform: `docker run --rm -p 8080:8080 --platform linux/arm64 ghcr.io/dustinzrm/one-mcp:latest`
+- Included runtimes
+  - Image ships with `node`, `npm`/`npx`, `python3`/`pip`, `bash`, `git`, `curl`
+  - Run stdio MCP servers directly inside the container (e.g. filesystem):
+    - Add upstream server in dashboard with:
+      - Command: `npx`
+      - Args: `["-y", "@modelcontextprotocol/server-filesystem", "/app/data"]`
+    - Mount host data: `-v /your/data:/app/data`
 - Docker Compose (optional)
   - ```yaml
     services:

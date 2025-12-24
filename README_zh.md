@@ -68,6 +68,13 @@ One MCP 是一个强大的 Model Context Protocol (MCP) 管理与分发系统。
 - 多架构支持
   - 镜像包含 `linux/amd64`、`linux/arm64`、`linux/arm/v7`
   - 指定平台测试：`docker run --rm -p 8080:8080 --platform linux/arm64 ghcr.io/dustinzrm/one-mcp:latest`
+- 内置运行环境
+  - 镜像内包含 `node`、`npm`/`npx`、`python3`/`pip`、`bash`、`git`、`curl`
+  - 可在容器内直接运行 stdio 类型的 MCP 服务（例如文件系统）：
+    - 在仪表盘添加上游服务：
+      - 命令：`npx`
+      - 参数：`["-y", "@modelcontextprotocol/server-filesystem", "/app/data"]`
+    - 挂载主机数据：`-v /your/data:/app/data`
 - 可选：Docker Compose
   - ```yaml
     services:
