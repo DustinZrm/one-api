@@ -23,4 +23,6 @@ COPY --from=go-builder /build/one-mcp ./one-mcp
 COPY --from=web-builder /web/dist /app/web/dist
 EXPOSE 8080
 ENV GIN_MODE=release
+ENV DATA_DIR=/app/data
+VOLUME /app/data
 ENTRYPOINT ["./one-mcp"]

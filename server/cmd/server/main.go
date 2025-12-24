@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"os"
+	"path/filepath"
 	"one-mcp/internal/api"
 	"one-mcp/internal/core"
 	"one-mcp/internal/model"
@@ -17,7 +19,19 @@ import (
 )
 
 func main() {
-	db, err := gorm.Open(sqlite.Open("one-mcp.db"), &gorm.Config{})
+	// Determine data directory
+	dataDir := os.Getenv("DATA_DIR")
+	if dataDir == "" {
+		dataDir = "data"
+	}
+
+	// Ensure data directory exists
+	if err := os.MkdirAll(dataDir, 0755); err != nil {
+		log.Fatalf("failed to create data directory: %v", err)
+	}
+
+	dbPath := filepath.Join(dataDir, "one-mcp.db")
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	if err != nil {
 		log.Fatal("failed to connect database")
 	}

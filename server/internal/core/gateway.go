@@ -162,7 +162,7 @@ func (g *Gateway) handleInitialize(req *JSONRPCMessage) (*JSONRPCMessage, error)
 		},
 		"serverInfo": map[string]string{
 			"name":    "one-mcp-gateway",
-			"version": "1.1.0",
+			"version": "1.1.1",
 		},
 	}
 	resBytes, _ := json.Marshal(result)
