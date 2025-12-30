@@ -24,6 +24,7 @@ func main() {
 	if dataDir == "" {
 		dataDir = "data"
 	}
+	dataDir = filepath.Clean(dataDir)
 
 	// Ensure data directory exists
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
@@ -62,7 +63,12 @@ func main() {
 	
 	// CORS
 	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true
+	if origins := os.Getenv("ALLOWED_ORIGINS"); origins != "" {
+		config.AllowOrigins = strings.Split(origins, ",")
+		config.AllowAllOrigins = false
+	} else {
+		config.AllowAllOrigins = true
+	}
 	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
 	r.Use(cors.New(config))
 
