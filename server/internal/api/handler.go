@@ -162,6 +162,20 @@ func (h *Handler) CreateServer(c *gin.Context) {
 		return
 	}
 
+	if server.TransportType == "stdio" {
+		var args []string
+		if server.Args != "" {
+			if err := json.Unmarshal([]byte(server.Args), &args); err != nil {
+				c.JSON(400, gin.H{"error": "Invalid args format"})
+				return
+			}
+		}
+		if err := core.ValidateCommand(server.Command, args); err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
 	fmt.Printf("[Debug] Creating Server: Name=%s Type=%s URL=%s Cmd=%s\n", server.Name, server.TransportType, server.URL, server.Command)
 
 	// Check if exists (including soft-deleted)
@@ -184,13 +198,27 @@ func (h *Handler) CreateServer(c *gin.Context) {
 func (h *Handler) UpdateServer(c *gin.Context) {
 	id := c.Param("id")
 	var server model.UpstreamServer
-	if err := h.db.First(&server, id).Error; err != nil {
+	if err := h.db.First(&server, "id = ?", id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "not found"})
 		return
 	}
 	if err := c.ShouldBindJSON(&server); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
+	}
+
+	if server.TransportType == "stdio" {
+		var args []string
+		if server.Args != "" {
+			if err := json.Unmarshal([]byte(server.Args), &args); err != nil {
+				c.JSON(400, gin.H{"error": "Invalid args format"})
+				return
+			}
+		}
+		if err := core.ValidateCommand(server.Command, args); err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	fmt.Printf("[Debug] Updating Server %s: Name=%s Type=%s URL=%s Cmd=%s\n", id, server.Name, server.TransportType, server.URL, server.Command)
@@ -202,7 +230,7 @@ func (h *Handler) UpdateServer(c *gin.Context) {
 
 func (h *Handler) DeleteServer(c *gin.Context) {
 	id := c.Param("id")
-	h.db.Unscoped().Delete(&model.UpstreamServer{}, id)
+	h.db.Unscoped().Where("id = ?", id).Delete(&model.UpstreamServer{})
 	h.gateway.ReloadUpstreams()
 	c.JSON(200, gin.H{"status": "ok"})
 }
@@ -229,7 +257,7 @@ func (h *Handler) CreateKey(c *gin.Context) {
 func (h *Handler) UpdateKey(c *gin.Context) {
 	id := c.Param("id")
 	var key model.ApiKey
-	if err := h.db.First(&key, id).Error; err != nil {
+	if err := h.db.First(&key, "id = ?", id).Error; err != nil {
 		c.JSON(404, gin.H{"error": "not found"})
 		return
 	}
@@ -256,7 +284,7 @@ func (h *Handler) UpdateKey(c *gin.Context) {
 
 func (h *Handler) DeleteKey(c *gin.Context) {
 	id := c.Param("id")
-	h.db.Delete(&model.ApiKey{}, id)
+	h.db.Where("id = ?", id).Delete(&model.ApiKey{})
 	c.JSON(200, gin.H{"status": "ok"})
 }
 
@@ -309,7 +337,14 @@ func (h *Handler) HandleSSE(c *gin.Context) {
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
 	c.Header("Connection", "keep-alive")
-	c.Header("Access-Control-Allow-Origin", "*")
+	
+	origin := c.Request.Header.Get("Origin")
+	if origin != "" {
+		c.Header("Access-Control-Allow-Origin", origin)
+		c.Header("Access-Control-Allow-Credentials", "true")
+	} else {
+		c.Header("Access-Control-Allow-Origin", "*")
+	}
 
 	sessionID := uuid.New().String()
 	msgChan := make(chan []byte, 10)

@@ -54,7 +54,14 @@ func (t *SSETransport) Start(ctx context.Context, onMessage func([]byte), onRead
 	
 	req.Header.Set("Accept", "text/event-stream")
 	if t.Config.AuthToken != "" {
-		req.Header.Set("Authorization", "Bearer "+t.Config.AuthToken)
+		// Sanitize AuthToken to prevent header injection
+		token := strings.Map(func(r rune) rune {
+			if r == '\n' || r == '\r' {
+				return -1
+			}
+			return r
+		}, t.Config.AuthToken)
+		req.Header.Set("Authorization", "Bearer "+token)
 	}
 
 	resp, err := t.Client.Do(req)
@@ -117,7 +124,14 @@ func (t *SSETransport) Send(payload []byte) error {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	if t.Config.AuthToken != "" {
-		req.Header.Set("Authorization", "Bearer "+t.Config.AuthToken)
+		// Sanitize AuthToken to prevent header injection
+		token := strings.Map(func(r rune) rune {
+			if r == '\n' || r == '\r' {
+				return -1
+			}
+			return r
+		}, t.Config.AuthToken)
+		req.Header.Set("Authorization", "Bearer "+token)
 	}
 	
 	resp, err := t.Client.Do(req)
@@ -155,7 +169,14 @@ func NewStdioTransport(cfg model.UpstreamServer) *StdioTransport {
 func (t *StdioTransport) Start(ctx context.Context, onMessage func([]byte), onReady func()) error {
 	var args []string
 	if t.Config.Args != "" {
-		json.Unmarshal([]byte(t.Config.Args), &args)
+		if err := json.Unmarshal([]byte(t.Config.Args), &args); err != nil {
+			return fmt.Errorf("invalid args: %v", err)
+		}
+	}
+
+	// Validate command and args for potential injection
+	if err := ValidateCommand(t.Config.Command, args); err != nil {
+		return err
 	}
 
 	fmt.Printf("[StdioTransport %s] Starting command: %s %v\n", t.Config.Name, t.Config.Command, args)
@@ -210,22 +231,43 @@ func (t *StdioTransport) Start(ctx context.Context, onMessage func([]byte), onRe
 	// Large buffer just in case
 	buf := make([]byte, 1024*1024)
 	scanner.Buffer(buf, 10*1024*1024)
-	
+
 	for scanner.Scan() {
 		line := scanner.Bytes()
 		// Copy buffer because scanner reuses it
 		msg := make([]byte, len(line))
 		copy(msg, line)
-		
+
 		onMessage(msg)
 	}
-	
+
 	if err := t.cmd.Wait(); err != nil {
 		fmt.Printf("[StdioTransport %s] Process exited with error: %v\n", t.Config.Name, err)
 		return err
 	}
-	
+
 	fmt.Printf("[StdioTransport %s] Process exited cleanly\n", t.Config.Name)
+	return nil
+}
+
+func ValidateCommand(command string, args []string) error {
+	if command == "" {
+		return fmt.Errorf("command is empty")
+	}
+
+	// Forbid shell metacharacters in command
+	forbidden := ";|&><$()!`*?[]{}~\\\"'\n\r"
+	if strings.ContainsAny(command, forbidden) {
+		return fmt.Errorf("malicious characters in command")
+	}
+
+	// Forbid shell metacharacters in arguments
+	for _, arg := range args {
+		if strings.ContainsAny(arg, forbidden) {
+			return fmt.Errorf("malicious characters in argument: %s", arg)
+		}
+	}
+
 	return nil
 }
 

@@ -24,6 +24,7 @@ func main() {
 	if dataDir == "" {
 		dataDir = "data"
 	}
+	dataDir = filepath.Clean(dataDir)
 
 	// Ensure data directory exists
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
